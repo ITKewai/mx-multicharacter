@@ -223,6 +223,7 @@ RegisterNUICallback('CreateCharacter', function (data)
           lastname = data.lastname,
           sex = data.sex,
           dateofbirth = data.date,
+          height = data.height or 170,  --TODO: Add height to html page
           queue = data.queue
      }
      TriggerServerEvent('mx-multicharacter:CreateCharacter', MX.NewCharacterData)
@@ -230,12 +231,23 @@ RegisterNUICallback('CreateCharacter', function (data)
      DisplayRadar(1)
 end)
 
-AddEventHandler('mx-multicharacter:StartESX', function ()
+AddEventHandler('mx-multicharacter:StartESX', function (data)
      if not MX.essentialmode then
-          TriggerServerEvent('esx:onPlayerJoined')
+          if not MX.Multichar then
+               TriggerServerEvent('esx:onPlayerJoined')
+          else
+               --- Event not safe for net es_extended v1.3.5
+               --- (https://github.com/esx-framework/esx-legacy/blob/0e09d4ad2a4439fea44db607c9520f78e780fa1b/%5Besx%5D/es_extended/server/main.lua#L27)
+               ---
+               if data.firstname and data.lastname and data.sex and data.dateofbirth and data.height and data.queue then -- just to be sure
+                    TriggerServerEvent('mx-multicharacter:onPlayerJoined', data)
+               else
+                    print('DEBUG-CL: Missing params for Event  mx-multicharacter:onPlayerJoined')
+               end
+          end
      else
           TriggerServerEvent('es:firstJoinProper')
-		TriggerEvent('es:allowedToSpawn')
+          TriggerEvent('es:allowedToSpawn')
      end
 end)
 

@@ -3,6 +3,7 @@ RegisterNetEvent('mx-multicharacter:DeleteCharacter')
 RegisterNetEvent('mx-multicharacter:GetLastLoc')
 RegisterNetEvent('mx-multicharacter:CheckCharacterIsOwner')
 RegisterNetEvent('mx-multicharacter:CreateCharacter')
+RegisterNetEvent('mx-multicharacter:onPlayerJoined')
 
 ESX = nil
 TriggerEvent('esx:getSharedObject', function(obj) ESX = obj end)
@@ -34,7 +35,7 @@ end)
 AddEventHandler('mx-multicharacter:CreateCharacter', function (data)
      local src = source
      MX:SetLastCharacter(src, tonumber(data.queue))
-     MX:TCE('mx-multicharacter:StartESX', src)
+     MX:TCE('mx-multicharacter:StartESX', src, data)
      while not ESX.GetPlayerFromId(src) do Wait(500) print('Loading ESX for '..GetPlayerName(src)..'') end
      MX:SetGeneralInfos(MX:GetIdentifier(src), data)
      if MX.skinnothave then
@@ -54,6 +55,7 @@ AddEventHandler('mx-multicharacter:GetCharacters', function ()
      local fetchData = {
           ['@id'] = '%'..player..'%'
      }
+     print(fetch .. fetchData["@id"])
      local result = MySQL.Sync.fetchAll(fetch, fetchData)
      if result and #result > 0 then
           local data = {}
@@ -134,6 +136,11 @@ AddEventHandler('mx-multicharacter:CheckCharacterIsOwner', function (data)
      else
           DropPlayer(src, 'You dont have this character.')
      end
+end)
+
+AddEventHandler('mx-multicharacter:onPlayerJoined', function (data)
+     print('DEBUG-SV: Created new character >  '.. tonumber(data.queue) .. ':' .. MX:GetIdentifier(source))
+     TriggerEvent('esx:onPlayerJoined', source, tonumber(data.queue), data) -- char, data  (if data then new esxplayer
 end)
 
 function MX:CheckCharacterIsOwner(source, charid)

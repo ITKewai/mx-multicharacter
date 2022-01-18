@@ -14,7 +14,10 @@ MX = {
                owner = 'identifier'
           }
      },
-     Identifier = 'license', 
+     Identifier = 'license',
+
+     Multichar = false, -- es_extended/config.lua > Config.Multichar = ???
+
      Anims = {
           {
                dict = 'anim@amb@nightclub@peds@',
