@@ -3,7 +3,7 @@ $(function () {
      window.addEventListener('message', function (event) {
           switch (event.data.type) {
                case 'SetupCharacters':
-                    BuildCharacters(event.data.handler, event.data.slots, event.data.useVIP);
+                    BuildCharacters(event.data.handler, event.data.slots, event.data.useVIP, event.data.ShortMultichar);
                     break;
                case 'notification':
                     Information(event.data.msg)
@@ -82,7 +82,7 @@ $(document).on('keydown', function () {
      }
 });
 
-function BuildCharacters(data, slots, vip) {
+function BuildCharacters(data, slots, vip, shortmultichar) {
      document.getElementById('characters-container').innerHTML = `
           <div class="characters" data-char="1" data-cid="" data-active="true" data-inform={}>
                          <i class="fas fa-plus fa-2x"></i>
@@ -171,6 +171,7 @@ function BuildCharacters(data, slots, vip) {
      if (Object.keys(MX.Characters).length != 0) {
           $.each(MX.Characters, function (k, v) {
                var queue = v.citizenid.charAt(4);
+               if(shortmultichar == true) {queue = v.citizenid.charAt(0);}
                if ($(`.characters[data-char="${queue}"]`).data('active')) {
                     $(`.characters[data-char="${queue}"]`).html(`<span id="character-name">${v.firstname + ' ' + v.lastname}</span>`);
                     $(`.characters[data-char="${queue}"]`).data('cid', v.citizenid);

@@ -195,7 +195,8 @@ AddEventHandler('mx-multicharacter:GetCharacters', function (data, slots)
           type = 'SetupCharacters',
           handler = data,
           slots = slots,
-          useVIP = MX.UseVIP
+          useVIP = MX.UseVIP,
+          ShortMultichar = MX.Multichar
      })
      SetNuiFocus(true, true)
 end)
@@ -226,12 +227,12 @@ RegisterNUICallback('CreateCharacter', function (data)
           height = data.height or 170,  --TODO: Add height to html page
           queue = data.queue
      }
-     TriggerServerEvent('mx-multicharacter:CreateCharacter', MX.NewCharacterData)
+     TriggerServerEvent('mx-multicharacter:CreateCharacter', MX.NewCharacterData, true)
      MX:DelEntity()
      DisplayRadar(1)
 end)
 
-AddEventHandler('mx-multicharacter:StartESX', function (data)
+AddEventHandler('mx-multicharacter:StartESX', function (data, new)
      if not MX.essentialmode then
           if not MX.Multichar then
                TriggerServerEvent('esx:onPlayerJoined')
@@ -239,10 +240,14 @@ AddEventHandler('mx-multicharacter:StartESX', function (data)
                --- Event not safe for net es_extended v1.3.5
                --- (https://github.com/esx-framework/esx-legacy/blob/0e09d4ad2a4439fea44db607c9520f78e780fa1b/%5Besx%5D/es_extended/server/main.lua#L27)
                ---
-               if data.firstname and data.lastname and data.sex and data.dateofbirth and data.height and data.queue then -- just to be sure
-                    TriggerServerEvent('mx-multicharacter:onPlayerJoined', data)
+               if new and data then
+                    if data.firstname and data.lastname and data.sex and data.dateofbirth and data.height and data.queue then -- just to be sure
+                         TriggerServerEvent('mx-multicharacter:onPlayerJoined', data, new)
+                    else
+                         print('DEBUG-SV: missing some parameters from data table')
+                    end
                else
-                    print('DEBUG-CL: Missing params for Event  mx-multicharacter:onPlayerJoined')
+                    TriggerServerEvent('mx-multicharacter:onPlayerJoined', data, new)
                end
           end
      else

@@ -32,10 +32,10 @@ AddEventHandler('mx-multicharacter:GetLastLoc', function()
      end
 end)
 
-AddEventHandler('mx-multicharacter:CreateCharacter', function (data)
+AddEventHandler('mx-multicharacter:CreateCharacter', function (data, new)
      local src = source
      MX:SetLastCharacter(src, tonumber(data.queue))
-     MX:TCE('mx-multicharacter:StartESX', src, data)
+     MX:TCE('mx-multicharacter:StartESX', src, data, new)
      while not ESX.GetPlayerFromId(src) do Wait(500) print('Loading ESX for '..GetPlayerName(src)..'') end
      MX:SetGeneralInfos(MX:GetIdentifier(src), data)
      if MX.skinnothave then
@@ -61,8 +61,14 @@ AddEventHandler('mx-multicharacter:GetCharacters', function ()
           local data = {}
           if not MX.essentialmode then
                for i = 1, #result do
+                    local queue
+                    if MX.Multichar then
+                         queue = tonumber(result[i].identifier:sub(1, 1))
+                    else
+                         queue = tonumber(result[i].identifier:sub(5, 5))
+                    end
                     table.insert(data, {
-                         queue = tonumber(result[i].identifier:sub(5, 5)),
+                         queue = queue,
                          citizenid = result[i].identifier or '',
                          firstname = result[i].firstname or '',
                          lastname = result[i].lastname or '',
@@ -127,8 +133,8 @@ AddEventHandler('mx-multicharacter:CheckCharacterIsOwner', function (data)
      if MX:CheckCharacterIsOwner(src, data) then
           MX:SetLastCharacter(src, tonumber(data))
           MX:SetCharacter(src, tonumber(data))
-          MX:TCE('mx-multicharacter:StartESX', src)
-          while not ESX.GetPlayerFromId(src) do Wait(500) print('Loading ESX for '..GetPlayerName(src)..'') end
+          MX:TCE('mx-multicharacter:StartESX', src, data, false)
+          while not ESX.GetPlayerFromId(src) do Wait(500) print('Loading ESX2 for '..GetPlayerName(src)..'') end
           if MX.skinnothave then
                MX:TCE('mx-multicharacter:LoadSkin', src)
           end
@@ -138,9 +144,13 @@ AddEventHandler('mx-multicharacter:CheckCharacterIsOwner', function (data)
      end
 end)
 
-AddEventHandler('mx-multicharacter:onPlayerJoined', function (data)
-     print('DEBUG-SV: Created new character >  '.. tonumber(data.queue) .. ':' .. MX:GetIdentifier(source))
-     TriggerEvent('esx:onPlayerJoined', source, tonumber(data.queue), data) -- char, data  (if data then new esxplayer
+AddEventHandler('mx-multicharacter:onPlayerJoined', function (data, new)
+     if new then
+          print('DEBUG-SV: Created new character >  '.. tonumber(data.queue) .. ':' .. MX:GetIdentifier(source))
+          TriggerEvent('esx:onPlayerJoined', source, tonumber(data.queue), data) -- char, data  (if data then new esxplayer
+     else
+          TriggerEvent('esx:onPlayerJoined', source, data) -- char, data  (if data then new esxplayer
+     end
 end)
 
 function MX:CheckCharacterIsOwner(source, charid)
@@ -151,7 +161,7 @@ function MX:CheckCharacterIsOwner(source, charid)
      local result = MySQL.Sync.fetchAll(fetch, fetchData)
      if result and #result >= 1 then
           for i = 1, #result do
-               if charid == tonumber(result[i].identifier:sub(5, 5)) then
+               if charid == tonumber(result[i].identifier:sub(5, 5)) or (MX.Multichar and tonumber(result[i].identifier:sub(1, 1))) then
                     return true
                end
           end
@@ -175,9 +185,19 @@ function MX:DeleteCharacter(source, cid)
      if cid and source then
           if self:CheckCharacterIsOwner(source, cid) then
                for _, v in pairs(self.IdentifierTables) do
-                    local result = MySQL.Sync.fetchAll("select * from `"..v.table.."` where `"..v.owner.."` = 'Char"..cid..MX:GetIdentifier(source).."' limit 1")
+                    local result
+                    if MX.Multichar then
+                         result = MySQL.Sync.fetchAll("select * from `"..v.table.."` where `"..v.owner.."` = '"..cid..":"..MX:GetIdentifier(source).."' limit 1")
+                    else
+                         result = MySQL.Sync.fetchAll("select * from `"..v.table.."` where `"..v.owner.."` = 'Char"..cid..MX:GetIdentifier(source).."' limit 1")
+                    end
                     if result and result[1] then
-                         MySQL.Sync.execute("DELETE FROM `"..v.table.."` WHERE `"..v.owner.."` = 'Char"..cid..MX:GetIdentifier(source).."'")
+                         if MX.Multichar then
+                              MySQL.Sync.execute("DELETE FROM `"..v.table.."` WHERE `"..v.owner.."` = '"..cid..":"..MX:GetIdentifier(source).."'")
+                         else
+                              MySQL.Sync.execute("DELETE FROM `"..v.table.."` WHERE `"..v.owner.."` = 'Char"..cid..MX:GetIdentifier(source).."'")
+
+                         end
                     end
                end
                Wait(200)
@@ -224,9 +244,13 @@ end
  
 function MX:SetCharacter(source, charid)
      if not source then return print('line 190') end
-
+     local charIdentifier
      local currentUserIdentifier = MX:GetIdentifier(source)
-     local charIdentifier = 'Char'..charid..MX:GetIdentifier(source)
+     if MX.Multichar then
+          charIdentifier = charid..':' MX:GetIdentifier(source)
+     else
+          charIdentifier = 'Char'..charid..MX:GetIdentifier(source)
+     end
 
      for _, itable in pairs(self.IdentifierTables) do
           MySQL.Sync.execute("UPDATE `"..itable.table.."` SET `"..itable.owner.."` = '"..currentUserIdentifier.."' WHERE `"..itable.owner.."` = '"..charIdentifier.."'")
