@@ -6,6 +6,7 @@ RegisterNetEvent('mx-multicharacter:StartESX')
 RegisterNetEvent('mx-multicharacter:OpenSkinMenu')
 RegisterNetEvent('mx-multicharacter:LoadSkin')
 RegisterNetEvent('mx-multicharacter:refresh')
+RegisterNetEvent('esx:playerLoaded')
 
 CreateThread(function ()
      while true do
@@ -44,9 +45,11 @@ end)
 
 AddEventHandler('mx-multicharacter:OpenSkinMenu', function (sex)
      TriggerEvent('esx_skin:openSaveableMenu', function()
-          TriggerEvent('introCinematic:start', {
-               sex = sex
-          })
+          if MX.cutscene then
+               TriggerEvent('introCinematic:start', {
+                    sex = sex
+               })
+          end
      end)
 end)
 
@@ -218,6 +221,11 @@ RegisterNUICallback('CreateCharacter', function (data)
      SetPlayerModel(PlayerId(), GetHashKey('mp_m_freemode_01'))
      MX:Cam(false)
      SetNuiFocus(false, false)
+     if MX.Multichar then
+          if not IsScreenFadedOut() then
+               DoScreenFadeOut(0)
+          end
+     end
      Wait(500)
      MX.NewCharacterData = {
           firstname = data.firstname,
@@ -228,9 +236,10 @@ RegisterNUICallback('CreateCharacter', function (data)
           queue = data.queue
      }
      TriggerServerEvent('mx-multicharacter:CreateCharacter', MX.NewCharacterData, true)
+
      MX:DelEntity()
      DisplayRadar(1)
-end)
+     end)
 
 AddEventHandler('mx-multicharacter:StartESX', function (data, new)
      if not MX.essentialmode then
@@ -256,9 +265,47 @@ AddEventHandler('mx-multicharacter:StartESX', function (data, new)
      end
 end)
 
+AddEventHandler('esx:playerLoaded', function(xPlayer, isNew, skin)
+
+     if MX.Multichar then
+          DoScreenFadeIn(500)
+          SetEntityVisible(PlayerPedId(), false)
+
+          exports.spawnmanager:spawnPlayer({
+               x = xPlayer.coords.x,
+               y = xPlayer.coords.y,
+               z = xPlayer.coords.z + 0.25,
+               heading = xPlayer.coords.heading,
+               model = `mp_m_freemode_01`,
+               skipFade = false
+               }, function()
+                    TriggerServerEvent('esx:onPlayerSpawn')
+                    TriggerEvent('esx:onPlayerSpawn')
+                    TriggerEvent('playerSpawned') -- compatibility with old scripts
+                    TriggerEvent('esx:restoreLoadout')
+                    if isNew then
+                         if skin.sex == 0 then
+                         TriggerEvent('skinchanger:loadDefaultModel', true)
+                    else
+                    TriggerEvent('skinchanger:loadDefaultModel', false)
+                         end
+                         elseif skin then TriggerEvent('skinchanger:loadSkin', skin) end
+                    TriggerEvent('esx:loadingScreenOff')
+                    ShutdownLoadingScreen()
+                    ShutdownLoadingScreenNui()
+                    FreezeEntityPosition(PlayerPedId(), false)
+               end)
+     end
+end)
+
 RegisterNUICallback('PlayCharacter', function (data)
      MX:Cam(false)
      SetNuiFocus(false, false)
+     if MX.Multichar then
+          if not IsScreenFadedOut() then
+               DoScreenFadeOut(0)
+          end
+     end
      FreezeEntityPosition(PlayerPedId(), true)
      MX:DelEntity()
      DisplayRadar(1)

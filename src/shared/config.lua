@@ -18,6 +18,9 @@ MX = {
 
      Multichar = false, -- es_extended/config.lua > Config.Multichar = ???
 
+     MX_Spawn = false, -- use mx-spawn ?
+
+
      Anims = {
           {
                dict = 'anim@amb@nightclub@peds@',
@@ -53,11 +56,12 @@ MX = {
           },
      },
      skinnothave = false, -- If the skin menu does not appear or the skin does not load, set it to true.
+     cutscene = true, -- enable cutscene after skin
      spawnmanager = false,   -- If the character respawns after death, set it to true
      essentialmode = false, -- If using essentialmode set true
      GeneralSpawn = vec3(-1049.942, -2724.759, 20.169294),
      InvisibleSpawn = vec3(1170.10, -1264.40, 20.25),
-     UseVIP = true, -- 
+     UseVIP = true, --
      PedSpawnLocs = {
           [1] = vec4(1133.10, -1264.40, 20.75, 44.13),
           [2] = vec4(1130.40, -1265.90, 20.65, 44.13),

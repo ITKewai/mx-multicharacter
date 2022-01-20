@@ -175,6 +175,14 @@ exports('loadmulticharpeds', function(multipedID, skin)
 	MultiPed = nil
 end)
 ```
+- If you want to use Config.Multichar from es_extended,
+- ATTENZIONE: Check in your database that  table \`users\`.identifier has at least 43 lenght instead of 40 !!!
 
-
-
+- es_extended > server > classes > player.lua 17 line find
+```lua
+if Config.Multichar then self.license = 'license'..string.sub(identifier, 6) else self.license = 'license:'..identifier end
+```
+- change with
+```lua
+if Config.Multichar then if string.match(identifier, 'steam:') then self.license = string.sub(identifier, 3) else self.license = 'license:' .. string.sub(identifier, 3) end else self.license = 'license:'..identifier end
+```

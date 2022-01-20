@@ -138,7 +138,9 @@ AddEventHandler('mx-multicharacter:CheckCharacterIsOwner', function (data)
           if MX.skinnothave then
                MX:TCE('mx-multicharacter:LoadSkin', src)
           end
-          MX:TCE('mx-spawn:Open', src, data)
+          if MX.MX_Spawn then
+               MX:TCE('mx-spawn:Open', src, data)
+          end
      else
           DropPlayer(src, 'You dont have this character.')
      end
@@ -272,7 +274,7 @@ end
 function MX:GetIdentifier(player)
      for _,v in pairs(GetPlayerIdentifiers(player)) do
           if self.Identifier == 'steam' then  
-               if string.match(v, 'steam') then
+               if string.match(v, 'steam:') then
                     return v
                end
           elseif self.Identifier == 'license' then
