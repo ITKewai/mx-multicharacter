@@ -304,21 +304,23 @@ function MX:TCE(...)
 end
 
 RegisterCommand('giveslot', function (source, args)
+     local playerIdentifier
      local src = source
      local player = ESX.GetPlayerFromId(args[1])
+     if MX.Multichar then playerIdentifier = string.sub(player.identifier, 3) else playerIdentifier = player.identifier end
      local playerx = ESX.GetPlayerFromId(src)
      if not src then return false end
-     if playerx.getGroup() == 'admin' or playerx.getGroup() == 'superadmin' then 
+     if playerx.getGroup() == 'admin' or playerx.getGroup() == 'superadmin' then
           local type = args[2] == '2' and 'slot2' or args[2] == '3' and 'slot3' or args[2] == '4' and 'slot4' or false
           if not args[1] or not args[2] or not type then return MX:TCE('esx:showNotification', src, 'Usage: /giveslot id slotid | Example Usage: /giveslot 1 2') end
           local fetch = [[SELECT slots FROM user_slots WHERE identifier = @id;]]
-          local fetchData = {['@id'] = player.identifier}
+          local fetchData = {['@id'] = playerIdentifier}
           local result = MySQL.Sync.fetchAll(fetch, fetchData)
           if result and result[1] then
                local data = json.decode(result[1].slots)
                data[type] = true
                local update = [[UPDATE user_slots SET slots = @slots WHERE identifier = @id;]]
-               local updateData = {['@slots'] = json.encode(data), ['@id'] = player.identifier}
+               local updateData = {['@slots'] = json.encode(data), ['@id'] = playerIdentifier}
                MySQL.Sync.execute(update, updateData)
           else
                local newData = {
@@ -326,12 +328,12 @@ RegisterCommand('giveslot', function (source, args)
                     slot3 = false,
                     slot4 = false
                }
+               newData[type] = true
                local insert = [[INSERT INTO user_slots (identifier, slots) VALUES (@id, @slots);]]
                local insertData = {
-                    ['@id'] = player.identifier,
+                    ['@id'] = playerIdentifier,
                     ['@slots'] = json.encode(newData)
                }
-               newData[type] = true
                MySQL.Sync.execute(insert, insertData)
           end
      else
@@ -340,26 +342,28 @@ RegisterCommand('giveslot', function (source, args)
 end)
 
 RegisterCommand('takeslot', function (source, args)
+     local playerIdentifier
      local src = source
      local player = ESX.GetPlayerFromId(args[1])
+     if MX.Multichar then playerIdentifier = string.sub(player.identifier, 3) else playerIdentifier = player.identifier end
      local playerx = ESX.GetPlayerFromId(src)
      if not src then return false end
      if playerx.getGroup() == 'admin' or playerx.getGroup() == 'superadmin' then 
           local type = args[2] == '2' and 'slot2' or args[2] == '3' and 'slot3' or args[2] == '4' and 'slot4' or false
           if not args[1] or not args[2] or not type then return MX:TCE('esx:showNotification', src, 'Usage: /takeslot id slotid | Example Usage: /takeslot 1 2') end
           local fetch = [[SELECT slots FROM user_slots WHERE identifier = @id;]]
-          local fetchData = {['@id'] = player.identifier}
+          local fetchData = {['@id'] = playerIdentifier}
           local result = MySQL.Sync.fetchAll(fetch, fetchData)
           if result and result[1] then
                local data = json.decode(result[1].slots)
                data[type] = false
                local update = [[UPDATE user_slots SET slots = @slots WHERE identifier = @id;]]
-               local updateData = {['@slots'] = json.encode(data), ['@id'] = player.identifier}
+               local updateData = {['@slots'] = json.encode(data), ['@id'] = playerIdentifier}
                MySQL.Sync.execute(update, updateData)
           else
                local insert = [[INSERT INTO user_slots (identifier, slots) VALUES (@id, @slots);]]
                local insertData = {
-                    ['@id'] = player.identifier,
+                    ['@id'] = playerIdentifier,
                     ['@slots'] = json.encode({
                          slot2 = false,
                          slot3 = false,
